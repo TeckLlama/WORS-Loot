@@ -1,0 +1,29 @@
+<Ui xmlns="http://www.w3.org/1999/xhtml">
+    <Frame name="WORS_LootFrame" parent="UIParent" hidden="true">
+        <Size>
+            <AbsDimension x="700" y="500"/>
+        </Size>
+        <Anchors>
+            <Anchor point="CENTER"/>
+        </Anchors>
+        <Backdrop>
+            <Background>
+                <Color r="0" g="0" b="0" a="0.8"/>
+            </Background>
+            <Border>
+                <Color r="1" g="1" b="1" a="1"/>
+            </Border>
+        </Backdrop>
+        
+        <Frames>
+            <DropDownMenu name="WORS_LootFrameModuleDropdown" />
+            <DropDownMenu name="WORS_LootFrameSubcategoryDropdown" />
+        </Frames>
+        
+        <Scripts>
+            <OnShow>
+                WORS_Loot:OnShow()
+            </OnShow>
+        </Scripts>
+    </Frame>
+</Ui>

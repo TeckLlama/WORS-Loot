@@ -84,37 +84,28 @@ local function CreateLootButton(itemId, index)
 
     -- Set the button to link the item when clicked
     lootButton:SetScript("OnClick", function(self, button)
-    print("Button clicked for itemId: " .. itemId)  -- Debug message
+        print("Button clicked for itemId: " .. itemId)  -- Debug message
 
-    -- Get the item link
-    local itemLink = GetItemLink(itemId)
-    print("Item link for itemId " .. itemId .. ": " .. itemLink)  -- Debug print
-
-    if itemLink then
-        -- Check if the chat edit box is currently open
-        if ChatFrame1.editBox:IsVisible() then
-            -- Retrieve the current text in the chat input
-            local currentChatText = ChatFrame1.editBox:GetText()
-            
-            -- Append the item link to the current text
-            ChatFrame1.editBox:SetText(currentChatText .. " " .. itemLink)
-            
-            -- Move the cursor to the end of the input
-            ChatFrame1.editBox:SetCursorPosition(#currentChatText + #itemLink + 1)
-            
-            -- Focus on the chat input box
-            ChatFrame1.editBox:SetFocus()
-            
+        -- Get the item link
+        local itemLink = GetItemLink(itemId)
+        print("Item link for itemId " .. itemId .. ": " .. itemLink)  -- Debug print
+		ChatFrame_OpenChat(itemLink, SELECTED_CHAT_FRAME)  -- Link item in chat
+        if itemLink then
+            -- Link item in chat when clicked
+            ChatFrame_OpenChat(itemLink, SELECTED_CHAT_FRAME)  -- Link item in chat
             print("Linked item: " .. itemLink)  -- Debug message
         else
-            -- If the chat edit box is not open, use the traditional method
-            ChatFrame_OpenChat(itemLink, SELECTED_CHAT_FRAME)
-            print("Opened chat with item link: " .. itemLink)  -- Debug message
+            print("Item link not found for itemId: " .. itemId)  -- Debug message
         end
-    else
-        print("Item link not found for itemId: " .. itemId)  -- Debug message
-    end
-end)
+
+        -- Additional check for item info
+        local itemName, _, itemRarity = GetItemInfo(itemId)
+        if itemName then
+            print("Item info - Name: " .. itemName .. ", Rarity: " .. tostring(itemRarity))
+        else
+            print("Item info not found for itemId: " .. itemId)
+        end
+    end)
 
     lootButton:Show()  -- Show the button
     return lootButton
