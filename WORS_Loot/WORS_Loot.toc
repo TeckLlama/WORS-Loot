@@ -1,11 +1,9 @@
 ## Interface: 30300
 ## Title: WORS Loot
-## Notes: A loot addon inspired by AtlasLoot for WoW 3.3.5
+## Notes: Displays loot information based on selected categories
 ## Author: YourName
-## Version: 1.0
 
-WORS_Loot.xml
 WORS_Loot.lua
-WORS_Loot_Bosses.lua
 WORS_Loot_Slayer.lua
+WORS_Loot_Bosses.lua
 WORS_Loot_Skills.lua

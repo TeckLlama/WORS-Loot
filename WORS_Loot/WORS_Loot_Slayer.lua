@@ -1,14 +1,15 @@
--- WORS_Loot_Slayer.lua
--- Data and logic for Slayer module
-
-local WORS_Loot_Slayer = {}
-
-WORS_Loot_Slayer["Turael"] = {
-    { task = "Crawling Hand", loot = { {itemID = 12345, itemName = "Hand Bone"} } }
+WORS_Loot_Slayer_Data = {
+    Turael = {
+        ["Aberrant Spectres"] = {"Loot1", "Loot2"},
+        ["Abyssal Demons"] = {"Loot3", "Loot4"},
+        ["Ankou"] = {"Loot5"},
+    },
+    Mazchna = {
+        ["Giant Bats"] = {"Loot6"},
+        ["Murlocs"] = {"Loot7", "Loot8"},
+    },
+    Vannaka = {
+        ["Abyssal Demons"] = {"Loot9", "Loot10"},
+        ["Black Demons"] = {"Loot11"},
+    }
 }
-
-WORS_Loot_Slayer["Mazchna"] = {
-    { task = "Banshee", loot = { {itemID = 67890, itemName = "Ectoplasm"} } }
-}
-
-return WORS_Loot_Slayer
