@@ -1,15 +1,15 @@
 WORS_Loot_Slayer_Data = {
     Turael = {
-        ["Aberrant Spectres"] = {"Loot1", "Loot2"},
-        ["Abyssal Demons"] = {"Loot3", "Loot4"},
-        ["Ankou"] = {"Loot5"},
+        ["Aberrant Spectres"] = {90039},
+        ["Abyssal Demons"] = {90039,"Bones", "Loot4"},
+        ["Ankou"] = {90039,"Bones"},
     },
     Mazchna = {
-        ["Giant Bats"] = {"Loot6"},
-        ["Murlocs"] = {"Loot7", "Loot8"},
+        ["Giant Bats"] = {90039,"Bones"},
+        ["Murlocs"] = {90039,"Bones", "Loot8"},
     },
     Vannaka = {
-        ["Abyssal Demons"] = {"Loot9", "Loot10"},
-        ["Black Demons"] = {"Loot11"},
+        ["Abyssal Demons"] = {90039,"Bones", "Loot10"},
+        ["Black Demons"] = {90039,"Bones"},
     }
 }

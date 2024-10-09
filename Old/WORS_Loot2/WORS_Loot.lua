@@ -19,15 +19,15 @@ title:SetText("WORS Loot")
 -- Dropdowns
 local moduleDropdown = CreateFrame("Frame", "WORS_Loot_ModuleDropdown", WORS_Loot, "UIDropDownMenuTemplate")
 moduleDropdown:SetPoint("TOPLEFT", WORS_Loot, "TOPLEFT", 20, -30)
-UIDropDownMenu_SetWidth(moduleDropdown, 130)
+UIDropDownMenu_SetWidth(moduleDropdown, 130)  -- Set width for module dropdown
 
 local subcategoryDropdown = CreateFrame("Frame", "WORS_Loot_SubcategoryDropdown", WORS_Loot, "UIDropDownMenuTemplate")
 subcategoryDropdown:SetPoint("TOPLEFT", moduleDropdown, "TOPLEFT", 160, 0)
-UIDropDownMenu_SetWidth(subcategoryDropdown, 130)
+UIDropDownMenu_SetWidth(subcategoryDropdown, 130)  -- Set width for subcategory dropdown
 
 local thirdDropdown = CreateFrame("Frame", "WORS_Loot_ThirdDropdown", WORS_Loot, "UIDropDownMenuTemplate")
 thirdDropdown:SetPoint("TOPLEFT", subcategoryDropdown, "TOPLEFT", 160, 0)
-UIDropDownMenu_SetWidth(thirdDropdown, 130)
+UIDropDownMenu_SetWidth(thirdDropdown, 130)  -- Set width for third dropdown
 
 -- Loot Table Frame
 local lootTableFrame = CreateFrame("ScrollFrame", "WORS_Loot_LootTable", WORS_Loot, "UIPanelScrollFrameTemplate")
@@ -51,64 +51,8 @@ local lootItems = {}
 local function ClearLootContent()
     for _, item in ipairs(lootItems) do
         item:Hide()
-        item:ClearAllPoints()  -- Clear position to reset
     end
     wipe(lootItems)
-end
-
--- Create clickable item link with icon using item ID
--- Create clickable item link with icon using item ID
-local function CreateLootButton(itemId, index)
-    local lootButton = CreateFrame("Button", nil, lootContent)
-    lootButton:SetSize(200, 20)  -- Button size
-    lootButton:SetPoint("TOPLEFT", lootContent, "TOPLEFT", 5, -((index - 1) * 25))
-
-    -- Set the item icon
-    local itemIcon = lootButton:CreateTexture(nil, "ARTWORK")
-    itemIcon:SetSize(20, 20)  -- Icon size
-    itemIcon:SetPoint("LEFT", lootButton, "LEFT", 0, 0)
-    itemIcon:SetTexture(GetItemIcon(itemId))  -- Get the item icon
-
-    -- Set up item tooltip functionality
-    lootButton:SetScript("OnEnter", function(self)
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
-        GameTooltip:SetHyperlink(GetItemLink(itemId))  -- Display the item tooltip
-        GameTooltip:Show()
-    end)
-    lootButton:SetScript("OnLeave", function()
-        GameTooltip:Hide()
-    end)
-
-    lootButton:SetText(GetItemInfo(itemId) or "Unknown Item")  -- Set the item name
-    lootButton:SetNormalFontObject("GameFontNormal")  -- Use normal font for the button
-
-    -- Set the button to link the item when clicked
-    lootButton:SetScript("OnClick", function(self, button)
-        print("Button clicked for itemId: " .. itemId)  -- Debug message
-
-        -- Get the item link
-        local itemLink = GetItemLink(itemId)
-        print("Item link for itemId " .. itemId .. ": " .. itemLink)  -- Debug print
-		ChatFrame_OpenChat(itemLink, SELECTED_CHAT_FRAME)  -- Link item in chat
-        if itemLink then
-            -- Link item in chat when clicked
-            ChatFrame_OpenChat(itemLink, SELECTED_CHAT_FRAME)  -- Link item in chat
-            print("Linked item: " .. itemLink)  -- Debug message
-        else
-            print("Item link not found for itemId: " .. itemId)  -- Debug message
-        end
-
-        -- Additional check for item info
-        local itemName, _, itemRarity = GetItemInfo(itemId)
-        if itemName then
-            print("Item info - Name: " .. itemName .. ", Rarity: " .. tostring(itemRarity))
-        else
-            print("Item info not found for itemId: " .. itemId)
-        end
-    end)
-
-    lootButton:Show()  -- Show the button
-    return lootButton
 end
 
 -- Update Loot Table based on selection
@@ -121,10 +65,11 @@ local function UpdateLootTable(selectedMaster, selectedTask)
         lootEntries = WORS_Loot_Boss_Data[selectedTask]
     end
     if lootEntries then
-        for i, itemId in ipairs(lootEntries) do
-            local lootButton = CreateLootButton(itemId, i)
-            lootButton:SetParent(lootContent)  -- Set the button's parent to the content frame
-            table.insert(lootItems, lootButton)  -- Store the button in the lootItems table
+        for i, item in ipairs(lootEntries) do
+            local lootItem = lootContent:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+            lootItem:SetText(item)
+            lootItem:SetPoint("TOPLEFT", lootContent, "TOPLEFT", 5, -((#lootItems) * 20))
+            table.insert(lootItems, lootItem)
         end
     end
 end
@@ -211,4 +156,4 @@ function SlashCmdList.WORSLOOT(msg, editBox)
 end
 
 -- Show the main frame initially (optional)
--- WORS_Loot:Show() -- Uncomment this if you want it to show on load
+WORS_Loot:Show() -- Uncomment this if you want it to show on load
