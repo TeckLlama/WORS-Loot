@@ -3,19 +3,12 @@ local WORS_Loot = CreateFrame("Frame", "WORS_Loot", UIParent)
 WORS_Loot:SetSize(550, 450)
 WORS_Loot:SetPoint("CENTER")
 WORS_Loot:SetBackdrop({
-    --bgFile = "Interface/Tooltips/UI-Tooltip-Background",
-    --edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
-	--tile = true, tileSize = 16, edgeSize = 16,
-    --insets = { left = 4, right = 4, top = 4, bottom = 4 }
-	
-	
-	bgFile = "Interface\\WORS\\OldSchoolBackground2",
-    edgeFile = "Interface\\WORS\\OldSchool-Dialog-Border",
-    tile = false, tileSize = 32, edgeSize = 32,
-    insets = { left = 5, right = 6, top = 6, bottom = 5 }
+    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 }
 })
---WORS_Loot:SetBackdropColor(0, 0, 0, 1)
-
+WORS_Loot:SetBackdropColor(0, 0, 0, 1)
 WORS_Loot:Hide()
 print("WORS Loot main frame created.")
 
@@ -42,7 +35,7 @@ print("Third dropdown created.")
 
 -- Loot Table Frame
 local lootTableFrame = CreateFrame("ScrollFrame", "WORS_Loot_LootTable", WORS_Loot, "UIPanelScrollFrameTemplate")
-lootTableFrame:SetSize(225, 300)
+lootTableFrame:SetSize(225, 300)  -- Set a fixed size for the scroll frame
 lootTableFrame:SetPoint("TOPLEFT", moduleDropdown, "BOTTOMLEFT", 20, -20)
 
 lootTableFrame:SetBackdrop({
@@ -51,46 +44,50 @@ lootTableFrame:SetBackdrop({
     tile = true, tileSize = 16, edgeSize = 16,
     insets = { left = 4, right = 4, top = 4, bottom = 4 }
 })
-lootTableFrame:SetBackdropColor(0, 0, 0, 0)
-lootTableFrame:SetBackdropBorderColor(0, 0, 0, 0)
+-- Set the background color to opaque and border color to transparent
+lootTableFrame:SetBackdropColor(0, 0, 0, 0)  -- Opaque background
+lootTableFrame:SetBackdropBorderColor(0, 0, 0, 0)  -- Fully transparent border
 
 local lootContent = CreateFrame("Frame", nil, lootTableFrame)
-lootContent:SetSize(225, 1)
+lootContent:SetSize(225, 1)  -- Start with a height of 1 to avoid initial clipping
 lootTableFrame:SetScrollChild(lootContent)
 
 local lootItems = {}
 
--- -- Clear Loot Content
--- local function ClearLootContent()
-    -- print("Clearing loot content...")
-    -- for _, item in ipairs(lootItems) do
-        -- item:Hide()
-        -- item:ClearAllPoints()
-    -- end
-    -- wipe(lootItems)
--- end
+-- Clear Loot Content
+local function ClearLootContent()
+    print("Clearing loot content...")
+    for _, item in ipairs(lootItems) do
+        item:Hide()
+        item:ClearAllPoints()  -- Clear position to reset
+    end
+    wipe(lootItems)
+end
 
-local buttonHeight = 40
-local buttonSpacing = 5
+local buttonHeight = 40  -- Adjusted button height
+local buttonSpacing = 5   -- Space between buttons
 
 -- Create clickable item link with icon using item ID
-local buttonHeight = 40
-local buttonSpacing = 5
 local function CreateLootButton(itemId, index)
     print("Creating loot button for item ID:", itemId)
-    if not itemId then
-        print("Error: Missing item ID.")
+    if not itemId or not GetItemIcon or not GetItemInfo then
+        print("Error: Missing item ID or required functions.")
         return nil
     end
 
     local lootButton = CreateFrame("Button", nil, lootContent)
     lootButton:SetSize(200, buttonHeight)
+
+    -- Adjusted position calculation
     lootButton:SetPoint("TOPLEFT", lootContent, "TOPLEFT", 10, -(index - 1) * (buttonHeight + buttonSpacing))
 
     local itemIcon = lootButton:CreateTexture(nil, "ARTWORK")
     itemIcon:SetSize(40, 40)
     itemIcon:SetPoint("LEFT", lootButton, "LEFT", 5, 0)
-    itemIcon:SetTexture(GetItemIcon(itemId) or "Interface/Icons/INV_Misc_QuestionMark")
+
+    -- Set the item icon or use the question mark icon if not found
+    local iconTexture = GetItemIcon(itemId) or "Interface/Icons/INV_Misc_QuestionMark"
+    itemIcon:SetTexture(iconTexture)
 
     lootButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
@@ -102,42 +99,13 @@ local function CreateLootButton(itemId, index)
             print("Error: Item link not found for item ID " .. itemId)
         end
     end)
-
     lootButton:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
 
     local itemName = lootButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     itemName:SetPoint("LEFT", itemIcon, "RIGHT", 5, 0)
-
-    -- Attempt to fetch the item name using the cached method
-    local itemInfo = {GetItemInfo(itemId)}
-    if itemInfo[1] then
-        itemName:SetText(itemInfo[1])  -- Use the name if found
-    else
-        -- Fallback method: Use item ID to create a hyperlink format
-        local itemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)
-        itemName:SetText(itemLink)  -- Display the raw hyperlink format
-        itemName:SetTextColor(1, 1, 0)  -- Yellow color for unknown items
-
-        -- Using GetTime for a simple timeout mechanism
-        local loadingStartTime = GetTime()
-
-        lootButton:SetScript("OnUpdate", function(self)
-            if (GetTime() - loadingStartTime) > 5 then
-                itemName:SetText("Unknown Item")  -- Change to a default state after timeout
-                lootButton:SetScript("OnUpdate", nil)  -- Stop the update script
-            else
-                -- Try to fetch the item info again to see if it has been cached now
-                itemInfo = {GetItemInfo(itemId)}
-                if itemInfo[1] then
-                    itemName:SetText(itemInfo[1])  -- Update the name if it has now been found
-                    itemName:SetTextColor(1, 1, 1)  -- Reset color to white
-                    lootButton:SetScript("OnUpdate", nil)  -- Stop the update script
-                end
-            end
-        end)
-    end
+    itemName:SetText(GetItemInfo(itemId) or tostring(itemId))  -- Use itemId as fallback
 
     lootButton:SetHighlightTexture("Interface/Buttons/UI-Common-MouseHilight", "ADD")
     lootButton:SetNormalFontObject("GameFontNormal")
@@ -155,29 +123,16 @@ local function CreateLootButton(itemId, index)
                 ChatFrame_OpenChat(itemLink, SELECTED_CHAT_FRAME)
             end
         else
-            -- Also try to generate the link from the itemId if the itemLink isn't found
-            local fallbackItemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)
-            print("Error: Item link not found for item ID " .. itemId .. ". Using fallback link: " .. fallbackItemLink)
+            print("Error: Item link not found for item ID " .. itemId)
         end
     end)
 
+    -- Dynamically adjust the height of the lootContent based on the number of buttons
+    local contentHeight = index * (buttonHeight + buttonSpacing)  -- Height based on number of items
+    lootContent:SetHeight(contentHeight)  -- Set content height
+
     lootButton:Show()
     return lootButton
-end
-
--- Clear Loot Content
-local function ClearLootContent()
-    print("Clearing loot content...")
-    for _, item in ipairs(lootItems) do
-        -- Cancel the loading timeout if it exists
-        if item.loadingTimeout then
-            item.loadingTimeout:Cancel()
-            item.loadingTimeout = nil  -- Clean up the reference
-        end
-        item:Hide()
-        item:ClearAllPoints()
-    end
-    wipe(lootItems)
 end
 
 -- Update Loot Table based on selection
@@ -232,7 +187,7 @@ local function UpdateSubcategoryDropdown(selectedModule)
 
     if selectedModule == "Bosses" then
         UIDropDownMenu_SetText(subcategoryDropdown, "Select Boss")
-        local bosses = {"King Black Dragon", "Kalphite Queen", "Test"}
+        local bosses = {"King Black Dragon", "Kalphite Queen"}
         UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
             for _, boss in ipairs(bosses) do
                 local info = UIDropDownMenu_CreateInfo()
@@ -246,7 +201,7 @@ local function UpdateSubcategoryDropdown(selectedModule)
         end)
     elseif selectedModule == "Slayer" then
         UIDropDownMenu_SetText(subcategoryDropdown, "Select Master")
-        local masters = {"Turael", "Mazchna", "Vannaka"}
+        local masters = {"Turael", "Mazchna"}
         UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
             for _, master in ipairs(masters) do
                 local info = UIDropDownMenu_CreateInfo()
@@ -261,7 +216,7 @@ local function UpdateSubcategoryDropdown(selectedModule)
     end
 end
 
--- Module Dropdown Logic
+-- Module Dropdown Initialization
 UIDropDownMenu_Initialize(moduleDropdown, function(self, level)
     local modules = {"Bosses", "Slayer"}
     for _, module in ipairs(modules) do
@@ -275,10 +230,10 @@ UIDropDownMenu_Initialize(moduleDropdown, function(self, level)
     end
 end)
 
--- Toggle Command for Frame Visibility
-SLASH_WORS_LOOT1 = "/worsloot"
-SlashCmdList["WORS_LOOT"] = function()
-    if WORS_Loot:IsVisible() then
+-- Show/Hide Frame Command
+SLASH_WORSLOOT1 = "/worsloot"
+SlashCmdList["WORSLOOT"] = function()
+    if WORS_Loot:IsShown() then
         WORS_Loot:Hide()
     else
         WORS_Loot:Show()
