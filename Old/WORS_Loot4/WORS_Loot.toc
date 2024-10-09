@@ -1,0 +1,9 @@
+## Interface: 30300
+## Title: WORS Loot
+## Notes: Displays loot information based on selected categories
+## Author: YourName
+
+WORS_Loot.lua
+WORS_Loot_Slayer.lua
+WORS_Loot_Bosses.lua
+WORS_Loot_Skills.lua
