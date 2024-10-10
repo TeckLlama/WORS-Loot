@@ -117,16 +117,14 @@ local function CreateLootButton(itemId, index)
     else
         -- Fallback method: Use item ID to create a hyperlink format
         local itemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)
-        
-		
-		itemName:SetText(itemLink)  -- Display the raw hyperlink format
+        itemName:SetText(itemLink)  -- Display the raw hyperlink format
         itemName:SetTextColor(1, 1, 0)  -- Yellow color for unknown items
 
         -- Using GetTime for a simple timeout mechanism
         local loadingStartTime = GetTime()
 
         lootButton:SetScript("OnUpdate", function(self)
-            if (GetTime() - loadingStartTime) > 120 then
+            if (GetTime() - loadingStartTime) > 5 then
                 itemName:SetText("Unknown Item")  -- Change to a default state after timeout
                 lootButton:SetScript("OnUpdate", nil)  -- Stop the update script
             else
@@ -154,18 +152,12 @@ local function CreateLootButton(itemId, index)
                 ChatFrame1.editBox:SetCursorPosition(#currentChatText + #itemLink + 1)
                 ChatFrame1.editBox:SetFocus()
             else
-                ItemRefTooltip:SetOwner(self, "ANCHOR_RIGHT")
-				ItemRefTooltip:SetHyperlink(itemLink)
-				ItemRefTooltip:Show()
+                ChatFrame_OpenChat(itemLink, SELECTED_CHAT_FRAME)
             end
         else
-			-- Also try to generate the link from the itemId if the itemLink isn't found
-			local fallbackItemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)
-        
-			-- Show the fallback item tooltip directly
-			ItemRefTooltip:SetOwner(self, "ANCHOR_RIGHT")
-			ItemRefTooltip:SetHyperlink(fallbackItemLink)
-			ItemRefTooltip:Show()
+            -- Also try to generate the link from the itemId if the itemLink isn't found
+            local fallbackItemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)
+            print("Error: Item link not found for item ID " .. itemId .. ". Using fallback link: " .. fallbackItemLink)
         end
     end)
 
@@ -240,7 +232,7 @@ local function UpdateSubcategoryDropdown(selectedModule)
 
     if selectedModule == "Bosses" then
         UIDropDownMenu_SetText(subcategoryDropdown, "Select Boss")
-        local bosses = {"King Black Dragon", "Kalphite Queen", "Test 1", "Test 2", "Test 3", "Test 4", "Test 5","Test 6", "Test 7", "Test 8", "Test 9", "Test 10"}
+        local bosses = {"King Black Dragon", "Kalphite Queen", "Test"}
         UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
             for _, boss in ipairs(bosses) do
                 local info = UIDropDownMenu_CreateInfo()
@@ -292,59 +284,5 @@ SlashCmdList["WORS_LOOT"] = function()
         WORS_Loot:Show()
     end
 end
-
--- Minimap Icon for WORS_Loot using LibDBIcon and Ace3
-local addon = LibStub("AceAddon-3.0"):NewAddon("WORS_Loot")
-WORSLootMinimapButton = LibStub("LibDBIcon-1.0", true)
-
-local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("WORS_Loot", {
-	type = "data source",
-	text = "WORS Loot",
-	icon = "Interface\\Icons\\INV_Misc_Bag_CoreFelclothBag",
-	OnClick = function(self, btn)
-        if btn == "LeftButton" then
-            if WORS_Loot:IsShown() then
-                WORS_Loot:Hide()
-            else
-                WORS_Loot:Show()
-            end
-        elseif btn == "RightButton" then
-            -- If you have another frame for settings, replace `settingsFrame` with the actual frame's name.
-            --if settingsFrame and settingsFrame:IsShown() then
-            --    settingsFrame:Hide()
-            --elseif settingsFrame then
-            --    settingsFrame:Show()
-            --end
-			if WORS_Loot:IsShown() then
-                WORS_Loot:Hide()
-            else
-                WORS_Loot:Show()
-            end
-        end
-	end,
-
-	OnTooltipShow = function(tooltip)
-		if not tooltip or not tooltip.AddLine then
-			return
-		end
-
-		tooltip:AddLine("WORS Loot\n\nLeft-click: Toggle WORS Loot Window", nil, nil, nil, nil)
-		tooltip:AddLine("Right-click: N/A Placeholder", nil, nil, nil, nil)
-	end,
-})
-
-function addon:OnInitialize()
-	self.db = LibStub("AceDB-3.0"):New("WORSLootMinimapDB", {
-		profile = {
-			minimap = {
-				hide = false,
-			},
-		},
-	})
-
-	WORSLootMinimapButton:Register("WORS_Loot", miniButton, self.db.profile.minimap)
-end
-
-WORSLootMinimapButton:Show("WORS_Loot")
 
 print("WORS Loot addon loaded.")
