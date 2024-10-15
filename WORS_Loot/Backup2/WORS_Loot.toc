@@ -1,0 +1,18 @@
+## Interface: 30300
+## Title: WORS Loot
+## Notes: An addon for displaying loot tables in WORS.
+## Author: YourName
+## Version: 1.0
+## RequiredDeps: Ace3, LibDBIcon-1.0
+
+
+# Libraries
+libs/Ace3/AceAddon-3.0/AceAddon-3.0.lua
+libs/Ace3/AceDB-3.0/AceDB-3.0.lua
+libs/LibDBIcon-1.0/embeds.xml
+
+# Main and Data Files
+WORS_Loot.lua
+WORS_Loot_Slayer.lua
+WORS_Loot_Bosses.lua
+WORS_Loot_Skills.lua

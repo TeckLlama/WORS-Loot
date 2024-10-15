@@ -2,8 +2,13 @@
 local WORS_Loot = CreateFrame("Frame", "WORS_Loot", UIParent)
 WORS_Loot:SetSize(550, 450)
 WORS_Loot:SetPoint("CENTER")
-
-WORS_Loot:SetBackdrop({	
+WORS_Loot:SetBackdrop({
+    --bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+    --edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+	--tile = true, tileSize = 16, edgeSize = 16,
+    --insets = { left = 4, right = 4, top = 4, bottom = 4 }
+	
+	
 	bgFile = "Interface\\WORS\\OldSchoolBackground2",
     edgeFile = "Interface\\WORS\\OldSchool-Dialog-Border",
     tile = false, tileSize = 32, edgeSize = 32,
@@ -11,30 +16,8 @@ WORS_Loot:SetBackdrop({
 })
 --WORS_Loot:SetBackdropColor(0, 0, 0, 1)
 
--- Enable mouse interactions
-WORS_Loot:EnableMouse(true)
-WORS_Loot:SetMovable(true)
-WORS_Loot:RegisterForDrag("LeftButton")
-
--- Set up dragging behavior
-WORS_Loot:SetScript("OnMouseDown", function(self, button)
-    if button == "LeftButton" then
-        self:StartMoving()
-    end
-end)
-
-WORS_Loot:SetScript("OnMouseUp", function(self, button)
-    if button == "LeftButton" then
-        self:StopMovingOrSizing()
-    end
-end)
-
--- Optional: keep the frame within screen bounds
-WORS_Loot:SetClampedToScreen(true)
-
 WORS_Loot:Hide()
 print("WORS Loot main frame created.")
-
 
 -- Title
 local title = WORS_Loot:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -57,11 +40,11 @@ thirdDropdown:SetPoint("TOPLEFT", subcategoryDropdown, "TOPLEFT", 160, 0)
 UIDropDownMenu_SetWidth(thirdDropdown, 130)
 print("Third dropdown created.")
 
-
 -- Loot Table Frame
 local lootTableFrame = CreateFrame("ScrollFrame", "WORS_Loot_LootTable", WORS_Loot, "UIPanelScrollFrameTemplate")
-lootTableFrame:SetSize(440, 350)
+lootTableFrame:SetSize(225, 300)
 lootTableFrame:SetPoint("TOPLEFT", moduleDropdown, "BOTTOMLEFT", 20, -20)
+
 lootTableFrame:SetBackdrop({
     bgFile = "Interface/Tooltips/UI-Tooltip-Background",
     edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
@@ -70,10 +53,23 @@ lootTableFrame:SetBackdrop({
 })
 lootTableFrame:SetBackdropColor(0, 0, 0, 0)
 lootTableFrame:SetBackdropBorderColor(0, 0, 0, 0)
+
 local lootContent = CreateFrame("Frame", nil, lootTableFrame)
 lootContent:SetSize(225, 1)
 lootTableFrame:SetScrollChild(lootContent)
+
 local lootItems = {}
+
+-- -- Clear Loot Content
+-- local function ClearLootContent()
+    -- print("Clearing loot content...")
+    -- for _, item in ipairs(lootItems) do
+        -- item:Hide()
+        -- item:ClearAllPoints()
+    -- end
+    -- wipe(lootItems)
+-- end
+
 local buttonHeight = 40
 local buttonSpacing = 5
 
@@ -86,16 +82,16 @@ local function CreateLootButton(itemId, index)
         print("Error: Missing item ID.")
         return nil
     end
+
     local lootButton = CreateFrame("Button", nil, lootContent)
-    lootButton:SetSize(220, buttonHeight)
-    -- Calculate row and column based on the index
-    local column = (index - 1) % 2  -- 0 for first column, 1 for second column
-    local row = math.floor((index - 1) / 2)  -- Calculate the row number
-    lootButton:SetPoint("TOPLEFT", lootContent, "TOPLEFT", 10 + column * (220 + 10), -(row * (buttonHeight + buttonSpacing)))
+    lootButton:SetSize(200, buttonHeight)
+    lootButton:SetPoint("TOPLEFT", lootContent, "TOPLEFT", 10, -(index - 1) * (buttonHeight + buttonSpacing))
+
     local itemIcon = lootButton:CreateTexture(nil, "ARTWORK")
     itemIcon:SetSize(40, 40)
     itemIcon:SetPoint("LEFT", lootButton, "LEFT", 5, 0)
     itemIcon:SetTexture(GetItemIcon(itemId) or "Interface/Icons/INV_Misc_QuestionMark")
+
     lootButton:SetScript("OnEnter", function(self)
         GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
         local itemLink = GetItemLink(itemId)
@@ -106,23 +102,29 @@ local function CreateLootButton(itemId, index)
             print("Error: Item link not found for item ID " .. itemId)
         end
     end)
+
     lootButton:SetScript("OnLeave", function()
         GameTooltip:Hide()
     end)
+
     local itemName = lootButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     itemName:SetPoint("LEFT", itemIcon, "RIGHT", 5, 0)
-    itemName:SetFont("Fonts\\runescape.ttf", 20)  -- Set custom font and size
+
     -- Attempt to fetch the item name using the cached method
     local itemInfo = {GetItemInfo(itemId)}
     if itemInfo[1] then
         itemName:SetText(itemInfo[1])  -- Use the name if found
     else
         -- Fallback method: Use item ID to create a hyperlink format
-        local itemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)        
-        itemName:SetText(itemLink)  -- Display the raw hyperlink format
+        local itemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)
+        
+		
+		itemName:SetText(itemLink)  -- Display the raw hyperlink format
         itemName:SetTextColor(1, 1, 0)  -- Yellow color for unknown items
+
         -- Using GetTime for a simple timeout mechanism
         local loadingStartTime = GetTime()
+
         lootButton:SetScript("OnUpdate", function(self)
             if (GetTime() - loadingStartTime) > 120 then
                 itemName:SetText("Unknown Item")  -- Change to a default state after timeout
@@ -138,8 +140,11 @@ local function CreateLootButton(itemId, index)
             end
         end)
     end
+
     lootButton:SetHighlightTexture("Interface/Buttons/UI-Common-MouseHilight", "ADD")
+    lootButton:SetNormalFontObject("GameFontNormal")
     lootButton:SetPushedTextOffset(0, -1)
+
     lootButton:SetScript("OnClick", function(self, button)
         local itemLink = GetItemLink(itemId)
         if itemLink then
@@ -150,18 +155,20 @@ local function CreateLootButton(itemId, index)
                 ChatFrame1.editBox:SetFocus()
             else
                 ItemRefTooltip:SetOwner(self, "ANCHOR_RIGHT")
-                ItemRefTooltip:SetHyperlink(itemLink)
-                ItemRefTooltip:Show()
+				ItemRefTooltip:SetHyperlink(itemLink)
+				ItemRefTooltip:Show()
             end
         else
-            -- Also try to generate the link from the itemId if the itemLink isn't found
-            local fallbackItemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)        
-            -- Show the fallback item tooltip directly
-            ItemRefTooltip:SetOwner(self, "ANCHOR_RIGHT")
-            ItemRefTooltip:SetHyperlink(fallbackItemLink)
-            ItemRefTooltip:Show()
+			-- Also try to generate the link from the itemId if the itemLink isn't found
+			local fallbackItemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)
+        
+			-- Show the fallback item tooltip directly
+			ItemRefTooltip:SetOwner(self, "ANCHOR_RIGHT")
+			ItemRefTooltip:SetHyperlink(fallbackItemLink)
+			ItemRefTooltip:Show()
         end
     end)
+
     lootButton:Show()
     return lootButton
 end
@@ -182,27 +189,15 @@ local function ClearLootContent()
 end
 
 -- Update Loot Table based on selection
-local function UpdateLootTable(subCat, subSubCat)
-    print("Updating loot table for SubCat:", subCat, "SubSubCat:", subSubCat)
+local function UpdateLootTable(selectedMaster, selectedTask)
+    print("Updating loot table for Master:", selectedMaster, "Task:", selectedTask)
     ClearLootContent()
     local lootEntries
-
-    -- Check for loot entries in Slayer Data
-    if subCat and subSubCat then
-		--lootEntries = WORS_Loot_Slayer_Data[subCat] and WORS_Loot_Slayer_Data[subCat][subSubCat]
-        lootEntries = WORS_Loot_Slayer_Data[subCat] and WORS_Loot_Slayer_Data[subCat][subSubCat]
-        print("Checking Slayer Data: ", lootEntries) -- Debugging output
-        -- If not found in Slayer Data, check Skill Data
-        if not lootEntries then
-            lootEntries = WORS_Loot_Skill_Data[subCat] and WORS_Loot_Skill_Data[subCat][subSubCat]
-            print("Checking Skill Data: ", lootEntries) -- Debugging output
-        end
-    -- If no SubCat provided, check Boss Data
-    elseif subSubCat then
-        lootEntries = WORS_Loot_Boss_Data[subSubCat]
+    if selectedMaster and selectedTask then
+        lootEntries = WORS_Loot_Slayer_Data[selectedMaster][selectedTask]
+    elseif selectedTask then
+        lootEntries = WORS_Loot_Boss_Data[selectedTask]
     end
-
-    -- If lootEntries is found, create loot buttons
     if lootEntries then
         for i, itemId in ipairs(lootEntries) do
             local lootButton = CreateLootButton(itemId, i)
@@ -212,18 +207,16 @@ local function UpdateLootTable(subCat, subSubCat)
             end
         end
     else
-        print("No loot entries found for the selected master/task.")
+        print("No loot entries found for selected master/task.")
     end
 end
-
-
-
 
 -- Update Subcategory for Slayer
 local function UpdateSlayerTasks(selectedMaster)
     print("Updating Slayer tasks for Master:", selectedMaster)
     UIDropDownMenu_ClearAll(thirdDropdown)
-    UIDropDownMenu_SetText(thirdDropdown, WORS_Loot_Slayer_Data.subcategoryTwoText)
+    UIDropDownMenu_SetText(thirdDropdown, "Select Task")
+
     local tasks = WORS_Loot_Slayer_Data[selectedMaster]
     UIDropDownMenu_Initialize(thirdDropdown, function(self, level)
         for task, _ in pairs(tasks) do
@@ -238,53 +231,16 @@ local function UpdateSlayerTasks(selectedMaster)
     end)
 end
 
--- Update Subcategory for Skills / ModularTemplate
-local function UpdateSubCategory(selectedCat)
-    print("UpdateSubCategory: Updating thirdDropdown for selected subSubCat:", selectedCat)
-    UIDropDownMenu_ClearAll(thirdDropdown)
-    UIDropDownMenu_SetText(thirdDropdown, WORS_Loot_Skill_Data.subcategoryTwoText)
-
-    local subTasks = WORS_Loot_Skill_Data[selectedCat]
-    
-    print("Retrieved subTasks for category:", selectedCat)
-    if subTasks then
-        for task, _ in pairs(subTasks) do
-            print(" - " .. task)
-        end
-    else
-        print("No subTasks found for category:", selectedCat)
-        return  -- Exit early if no tasks found
-    end
-
-    UIDropDownMenu_Initialize(thirdDropdown, function(self, level)
-        for task, _ in pairs(subTasks) do
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = task
-            info.func = function()
-                UIDropDownMenu_SetText(thirdDropdown, task)
-                UpdateLootTable(selectedCat, task)
-            end
-            UIDropDownMenu_AddButton(info)
-        end
-    end)
-end
-
-
 -- Update Subcategory Dropdown
 local function UpdateSubcategoryDropdown(selectedModule)
     print("Updating subcategory dropdown for module:", selectedModule)
     UIDropDownMenu_ClearAll(subcategoryDropdown)
     UIDropDownMenu_ClearAll(thirdDropdown)
     UIDropDownMenu_SetText(thirdDropdown, "")
-    
-	--ClearLootContent() -- Clear previous loot items
-	
-	-- one SubCatogry
+
     if selectedModule == "Bosses" then
-        UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Boss_Data.subcategoryOneText)
-        -- Retrieve bosses from the data file
-        local bosses = WORS_Loot_Boss_Data.bosses or {}
-		print("bosses: ",bosses)
+        UIDropDownMenu_SetText(subcategoryDropdown, "Select Boss")
+        local bosses = {"King Black Dragon", "Kalphite Queen", "Test 1", "Test 2", "Test 3", "Test 4", "Test 5","Test 6", "Test 7", "Test 8", "Test 9", "Test 10"}
         UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
             for _, boss in ipairs(bosses) do
                 local info = UIDropDownMenu_CreateInfo()
@@ -296,14 +252,9 @@ local function UpdateSubcategoryDropdown(selectedModule)
                 UIDropDownMenu_AddButton(info)
             end
         end)
-		thirdDropdown:Hide()
-	
-	-- two SubCatogry
     elseif selectedModule == "Slayer" then
-        UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Slayer_Data.subcategoryOneText)
-        -- Retrieve masters from the data file
-        local masters = WORS_Loot_Slayer_Data.masters or {}
-		print("masters: ",masters)
+        UIDropDownMenu_SetText(subcategoryDropdown, "Select Master")
+        local masters = {"Turael", "Mazchna", "Vannaka"}
         UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
             for _, master in ipairs(masters) do
                 local info = UIDropDownMenu_CreateInfo()
@@ -315,33 +266,12 @@ local function UpdateSubcategoryDropdown(selectedModule)
                 UIDropDownMenu_AddButton(info)
             end
         end)
-		thirdDropdown:Show()  
-	
-	-- two SubCatogry
-	elseif selectedModule == "Skills" then
-		UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Skill_Data.subcategoryOneText)
-		local subTwoCat = WORS_Loot_Skill_Data.subTwoCat or {}
-		print("subTwoCat: ", subTwoCat)  -- Check if this is populated correctly
-		UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
-			for _, cat in ipairs(subTwoCat) do
-				local info = UIDropDownMenu_CreateInfo()
-				info.text = cat
-				info.func = function()
-					UIDropDownMenu_SetText(subcategoryDropdown, cat)
-					UpdateSubCategory(cat)
-				end
-				UIDropDownMenu_AddButton(info)
-			end
-		end)
-		thirdDropdown:Show()  -- Make sure this is shown when Skills is selected
-	end
-
+    end
 end
-	
 
 -- Module Dropdown Logic
 UIDropDownMenu_Initialize(moduleDropdown, function(self, level)
-    local modules = {"Bosses", "Slayer", "Skills"}
+    local modules = {"Bosses", "Slayer"}
     for _, module in ipairs(modules) do
         local info = UIDropDownMenu_CreateInfo()
         info.text = module
@@ -366,6 +296,7 @@ end
 -- Minimap Icon for WORS_Loot using LibDBIcon and Ace3
 local addon = LibStub("AceAddon-3.0"):NewAddon("WORS_Loot")
 WORSLootMinimapButton = LibStub("LibDBIcon-1.0", true)
+
 local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("WORS_Loot", {
 	type = "data source",
 	text = "WORS Loot",
@@ -378,6 +309,7 @@ local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("WORS_Loot", {
                 WORS_Loot:Show()
             end
         elseif btn == "RightButton" then
+            -- If you have another frame for settings, replace `settingsFrame` with the actual frame's name.
             --if settingsFrame and settingsFrame:IsShown() then
             --    settingsFrame:Hide()
             --elseif settingsFrame then
@@ -390,14 +322,17 @@ local miniButton = LibStub("LibDataBroker-1.1"):NewDataObject("WORS_Loot", {
             end
         end
 	end,
+
 	OnTooltipShow = function(tooltip)
 		if not tooltip or not tooltip.AddLine then
 			return
 		end
+
 		tooltip:AddLine("WORS Loot\n\nLeft-click: Toggle WORS Loot Window", nil, nil, nil, nil)
 		tooltip:AddLine("Right-click: N/A Placeholder", nil, nil, nil, nil)
 	end,
 })
+
 function addon:OnInitialize()
 	self.db = LibStub("AceDB-3.0"):New("WORSLootMinimapDB", {
 		profile = {
@@ -406,9 +341,10 @@ function addon:OnInitialize()
 			},
 		},
 	})
+
 	WORSLootMinimapButton:Register("WORS_Loot", miniButton, self.db.profile.minimap)
 end
 
-
 WORSLootMinimapButton:Show("WORS_Loot")
+
 print("WORS Loot addon loaded.")

@@ -2,7 +2,6 @@
 local WORS_Loot = CreateFrame("Frame", "WORS_Loot", UIParent)
 WORS_Loot:SetSize(550, 450)
 WORS_Loot:SetPoint("CENTER")
-
 WORS_Loot:SetBackdrop({	
 	bgFile = "Interface\\WORS\\OldSchoolBackground2",
     edgeFile = "Interface\\WORS\\OldSchool-Dialog-Border",
@@ -11,30 +10,8 @@ WORS_Loot:SetBackdrop({
 })
 --WORS_Loot:SetBackdropColor(0, 0, 0, 1)
 
--- Enable mouse interactions
-WORS_Loot:EnableMouse(true)
-WORS_Loot:SetMovable(true)
-WORS_Loot:RegisterForDrag("LeftButton")
-
--- Set up dragging behavior
-WORS_Loot:SetScript("OnMouseDown", function(self, button)
-    if button == "LeftButton" then
-        self:StartMoving()
-    end
-end)
-
-WORS_Loot:SetScript("OnMouseUp", function(self, button)
-    if button == "LeftButton" then
-        self:StopMovingOrSizing()
-    end
-end)
-
--- Optional: keep the frame within screen bounds
-WORS_Loot:SetClampedToScreen(true)
-
 WORS_Loot:Hide()
 print("WORS Loot main frame created.")
-
 
 -- Title
 local title = WORS_Loot:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
@@ -76,10 +53,10 @@ lootTableFrame:SetScrollChild(lootContent)
 local lootItems = {}
 local buttonHeight = 40
 local buttonSpacing = 5
-
 -- Create clickable item link with icon using item ID
 local buttonHeight = 40
 local buttonSpacing = 5
+
 local function CreateLootButton(itemId, index)
     print("Creating loot button for item ID:", itemId)
     if not itemId then
@@ -111,7 +88,7 @@ local function CreateLootButton(itemId, index)
     end)
     local itemName = lootButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     itemName:SetPoint("LEFT", itemIcon, "RIGHT", 5, 0)
-    itemName:SetFont("Fonts\\runescape.ttf", 20)  -- Set custom font and size
+    itemName:SetFont("Fonts\\runescape.ttf", 30)  -- Set custom font and size
     -- Attempt to fetch the item name using the cached method
     local itemInfo = {GetItemInfo(itemId)}
     if itemInfo[1] then
@@ -165,7 +142,6 @@ local function CreateLootButton(itemId, index)
     lootButton:Show()
     return lootButton
 end
-
 -- Clear Loot Content
 local function ClearLootContent()
     print("Clearing loot content...")
@@ -180,29 +156,16 @@ local function ClearLootContent()
     end
     wipe(lootItems)
 end
-
 -- Update Loot Table based on selection
-local function UpdateLootTable(subCat, subSubCat)
-    print("Updating loot table for SubCat:", subCat, "SubSubCat:", subSubCat)
+local function UpdateLootTable(selectedMaster, selectedTask)
+    print("Updating loot table for Master:", selectedMaster, "Task:", selectedTask)
     ClearLootContent()
     local lootEntries
-
-    -- Check for loot entries in Slayer Data
-    if subCat and subSubCat then
-		--lootEntries = WORS_Loot_Slayer_Data[subCat] and WORS_Loot_Slayer_Data[subCat][subSubCat]
-        lootEntries = WORS_Loot_Slayer_Data[subCat] and WORS_Loot_Slayer_Data[subCat][subSubCat]
-        print("Checking Slayer Data: ", lootEntries) -- Debugging output
-        -- If not found in Slayer Data, check Skill Data
-        if not lootEntries then
-            lootEntries = WORS_Loot_Skill_Data[subCat] and WORS_Loot_Skill_Data[subCat][subSubCat]
-            print("Checking Skill Data: ", lootEntries) -- Debugging output
-        end
-    -- If no SubCat provided, check Boss Data
-    elseif subSubCat then
-        lootEntries = WORS_Loot_Boss_Data[subSubCat]
+    if selectedMaster and selectedTask then
+        lootEntries = WORS_Loot_Slayer_Data[selectedMaster][selectedTask]
+    elseif selectedTask then
+        lootEntries = WORS_Loot_Boss_Data[selectedTask]
     end
-
-    -- If lootEntries is found, create loot buttons
     if lootEntries then
         for i, itemId in ipairs(lootEntries) do
             local lootButton = CreateLootButton(itemId, i)
@@ -212,18 +175,14 @@ local function UpdateLootTable(subCat, subSubCat)
             end
         end
     else
-        print("No loot entries found for the selected master/task.")
+        print("No loot entries found for selected master/task.")
     end
 end
-
-
-
-
 -- Update Subcategory for Slayer
 local function UpdateSlayerTasks(selectedMaster)
     print("Updating Slayer tasks for Master:", selectedMaster)
     UIDropDownMenu_ClearAll(thirdDropdown)
-    UIDropDownMenu_SetText(thirdDropdown, WORS_Loot_Slayer_Data.subcategoryTwoText)
+    UIDropDownMenu_SetText(thirdDropdown, "Select Task")
     local tasks = WORS_Loot_Slayer_Data[selectedMaster]
     UIDropDownMenu_Initialize(thirdDropdown, function(self, level)
         for task, _ in pairs(tasks) do
@@ -237,54 +196,15 @@ local function UpdateSlayerTasks(selectedMaster)
         end
     end)
 end
-
--- Update Subcategory for Skills / ModularTemplate
-local function UpdateSubCategory(selectedCat)
-    print("UpdateSubCategory: Updating thirdDropdown for selected subSubCat:", selectedCat)
-    UIDropDownMenu_ClearAll(thirdDropdown)
-    UIDropDownMenu_SetText(thirdDropdown, WORS_Loot_Skill_Data.subcategoryTwoText)
-
-    local subTasks = WORS_Loot_Skill_Data[selectedCat]
-    
-    print("Retrieved subTasks for category:", selectedCat)
-    if subTasks then
-        for task, _ in pairs(subTasks) do
-            print(" - " .. task)
-        end
-    else
-        print("No subTasks found for category:", selectedCat)
-        return  -- Exit early if no tasks found
-    end
-
-    UIDropDownMenu_Initialize(thirdDropdown, function(self, level)
-        for task, _ in pairs(subTasks) do
-            local info = UIDropDownMenu_CreateInfo()
-            info.text = task
-            info.func = function()
-                UIDropDownMenu_SetText(thirdDropdown, task)
-                UpdateLootTable(selectedCat, task)
-            end
-            UIDropDownMenu_AddButton(info)
-        end
-    end)
-end
-
-
 -- Update Subcategory Dropdown
 local function UpdateSubcategoryDropdown(selectedModule)
     print("Updating subcategory dropdown for module:", selectedModule)
     UIDropDownMenu_ClearAll(subcategoryDropdown)
     UIDropDownMenu_ClearAll(thirdDropdown)
     UIDropDownMenu_SetText(thirdDropdown, "")
-    
-	--ClearLootContent() -- Clear previous loot items
-	
-	-- one SubCatogry
     if selectedModule == "Bosses" then
-        UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Boss_Data.subcategoryOneText)
-        -- Retrieve bosses from the data file
-        local bosses = WORS_Loot_Boss_Data.bosses or {}
-		print("bosses: ",bosses)
+        UIDropDownMenu_SetText(subcategoryDropdown, "Select Boss")
+        local bosses = {"King Black Dragon", "Kalphite Queen", "Test 1", "Test 2", "Test 3", "Test 4", "Test 5","Test 6", "Test 7", "Test 8", "Test 9", "Test 10"}
         UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
             for _, boss in ipairs(bosses) do
                 local info = UIDropDownMenu_CreateInfo()
@@ -296,14 +216,9 @@ local function UpdateSubcategoryDropdown(selectedModule)
                 UIDropDownMenu_AddButton(info)
             end
         end)
-		thirdDropdown:Hide()
-	
-	-- two SubCatogry
     elseif selectedModule == "Slayer" then
-        UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Slayer_Data.subcategoryOneText)
-        -- Retrieve masters from the data file
-        local masters = WORS_Loot_Slayer_Data.masters or {}
-		print("masters: ",masters)
+        UIDropDownMenu_SetText(subcategoryDropdown, "Select Master")
+        local masters = {"Turael", "Mazchna", "Vannaka"}
         UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
             for _, master in ipairs(masters) do
                 local info = UIDropDownMenu_CreateInfo()
@@ -315,33 +230,11 @@ local function UpdateSubcategoryDropdown(selectedModule)
                 UIDropDownMenu_AddButton(info)
             end
         end)
-		thirdDropdown:Show()  
-	
-	-- two SubCatogry
-	elseif selectedModule == "Skills" then
-		UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Skill_Data.subcategoryOneText)
-		local subTwoCat = WORS_Loot_Skill_Data.subTwoCat or {}
-		print("subTwoCat: ", subTwoCat)  -- Check if this is populated correctly
-		UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
-			for _, cat in ipairs(subTwoCat) do
-				local info = UIDropDownMenu_CreateInfo()
-				info.text = cat
-				info.func = function()
-					UIDropDownMenu_SetText(subcategoryDropdown, cat)
-					UpdateSubCategory(cat)
-				end
-				UIDropDownMenu_AddButton(info)
-			end
-		end)
-		thirdDropdown:Show()  -- Make sure this is shown when Skills is selected
-	end
-
+    end
 end
-	
-
 -- Module Dropdown Logic
 UIDropDownMenu_Initialize(moduleDropdown, function(self, level)
-    local modules = {"Bosses", "Slayer", "Skills"}
+    local modules = {"Bosses", "Slayer"}
     for _, module in ipairs(modules) do
         local info = UIDropDownMenu_CreateInfo()
         info.text = module
@@ -352,7 +245,6 @@ UIDropDownMenu_Initialize(moduleDropdown, function(self, level)
         UIDropDownMenu_AddButton(info)
     end
 end)
-
 -- Toggle Command for Frame Visibility
 SLASH_WORS_LOOT1 = "/worsloot"
 SlashCmdList["WORS_LOOT"] = function()
@@ -362,7 +254,6 @@ SlashCmdList["WORS_LOOT"] = function()
         WORS_Loot:Show()
     end
 end
-
 -- Minimap Icon for WORS_Loot using LibDBIcon and Ace3
 local addon = LibStub("AceAddon-3.0"):NewAddon("WORS_Loot")
 WORSLootMinimapButton = LibStub("LibDBIcon-1.0", true)
@@ -408,7 +299,5 @@ function addon:OnInitialize()
 	})
 	WORSLootMinimapButton:Register("WORS_Loot", miniButton, self.db.profile.minimap)
 end
-
-
 WORSLootMinimapButton:Show("WORS_Loot")
 print("WORS Loot addon loaded.")

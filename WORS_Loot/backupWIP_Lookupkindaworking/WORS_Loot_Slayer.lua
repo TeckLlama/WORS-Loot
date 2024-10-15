@@ -1,19 +1,10 @@
--- WORS_Loot_Slayer.lua
 WORS_Loot_Slayer_Data = {
-	subcategoryOneText = "Select Master",
-	subcategoryTwo = true,
-	subcategoryTwoText = "Select Task",
-	masters = {"Mazchna", "Vannaka","Turael"},  -- Add masters here
-		
-    Mazchna = {
-        ["Giant Bats"] = {90039,},
-        ["Murlocs"] = {90039,},
-    },
-    Vannaka = {
-        ["Abyssal Demons"] = {90039,90040},
-        ["Black Demons"] = {90039},
-    },
-	Turael = {
+    Turael = {
+        --["Aberrant Spectres"] = {90039},
+        --["Abyssal Demons"] = {90039, 90979, 999999},
+        --["Ankou"] = {90039, 999999},
+	--Turael,
+
 		--['Birds: Chicken'] = {"Bones", "Raw chicken", "Feathers", "Clue scroll (beginner)", "Key (medium)"},
 		  ['Birds: Chicken'] = {"90039", "90097", "90069"},
 		--['Goblins'] = {"Bones", "Hammer", "Water rune", "Goblin mail", "Bronze sq shield", "Body rune", "Earth rune", "Bronze bolts", "Chef's hat", "Bronze axe", "Bronze arrows", "Mind rune", "Beer", "Brass necklace", "Air talisman", "Clue scroll (easy)", "Bronze scimitar", "Chaos rune", "Nature rune", "Grapes", "Red cape", "Tin ore", "Grimy guam leaf", "Grimy marrentill", "Grimy tarromin", "Grimy harralander", "Grimy ranarr weed", "Grimy irit leaf", "Grimy avantoe", "Grimy kwuarm", "Grimy cadantine", "Grimy lantadyme", "Grimy dwarf weed", "Goblin champion scroll"},
@@ -62,8 +53,14 @@ WORS_Loot_Slayer_Data = {
 		  ['Cave slime'] = {"90844", "90184", "90107", "90009", "90067", "90194", "90160", "90168", "90251", "90527", "90521", "90526", "90242", "90247", "90519", "91122", "91121", "90381", "91125", "91124"},
 		--['Lizard'] = {"Big bones", "Desert lizard bone", "Iron ore", "Fire rune", "Coal", "Kebab", "Waterskin", "Nature rune", "Tin ore", "Potato seed", "Copper ore", "Silver ore", "Onion seed", "Grimy guam leaf", "Silver bar", "Grimy marrentill", "Cabbage seed", "Uncut sapphire", "Grimy tarromin", "Grimy harralander", "Mithril ore", "Grimy ranarr weed", "Tomato seed", "Uncut emerald", "Grimy irit leaf", "Grimy avantoe", "Sweetcorn seed", "Grimy kwuarm", "Uncut ruby", "Long bone", "Grimy cadantine", "Mystic gloves (light)", "Grimy lantadyme", "Grimy dwarf weed", "Strawberry seed", "Nature talisman", "Watermelon seed", "Uncut diamond", "Snape grass seed", "Loop half of key", "Tooth half of key", "Rune javelin", "Curved bone", "Rune spear", "Shield left half", "Dragon spear"},
 		  ['Lizards'] = {"90036", "90026", "90070", "90023", "90857", "90091", "90030", "90754", "90024", "90029", "90755", "90078", "90159", "90083", "90756", "90527", "90207", "90079", "90027", "90084", "90757", "90521", "90080", "90075", "90758", "90081", "90526", "90076", "90082", "90077", "90759", "90247", "90760", "90519", "90761", "91122", "91121", "90381", "91125", "91124"},
-		}
-
-}
-
 	
+	},
+    Mazchna = {
+        ["Giant Bats"] = {90039,},
+        ["Murlocs"] = {90039,},
+    },
+    Vannaka = {
+        ["Abyssal Demons"] = {90039,90040},
+        ["Black Demons"] = {90039},
+    }
+}

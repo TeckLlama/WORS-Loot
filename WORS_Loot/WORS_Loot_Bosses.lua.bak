@@ -1,7 +1,6 @@
 WORS_Loot_Boss_Data = {
 	subcategoryOneText = "Select Boss",
 	subcategoryTwoText = "",
-	
 	bosses = {"King Black Dragon", "Kalphite Queen", "99 Capes","Test 1", "Test 2", "Test 3"},  -- Add masters here
 	
 	['Kalphite Queen'] = {"90144", "2455", "90479", "90133", "90328", "90390", "90084", "90005", "90521", "90526", "90519", "90627", "90620", "90750"},

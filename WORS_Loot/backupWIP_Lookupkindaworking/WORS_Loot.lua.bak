@@ -1,0 +1,255 @@
+-- Create the main frame
+print("WORS Loot start..")
+local WORS_Loot = CreateFrame("Frame", "WORS_Loot", UIParent)
+WORS_Loot:SetSize(550, 450)
+WORS_Loot:SetPoint("CENTER")
+WORS_Loot:SetBackdrop({
+    bgFile = "Interface\\WORS\\OldSchoolBackground2",
+    edgeFile = "Interface\\WORS\\OldSchool-Dialog-Border",
+    tile = false, tileSize = 32, edgeSize = 32,
+    insets = { left = 5, right = 6, top = 6, bottom = 5 }
+})
+
+WORS_Loot:Hide()
+print("WORS Loot main frame created.")
+
+-- Title
+local title = WORS_Loot:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+title:SetPoint("TOP", 0, -10)
+title:SetText("WORS Loot")
+
+-- Dropdowns
+local moduleDropdown = CreateFrame("Frame", "WORS_Loot_ModuleDropdown", WORS_Loot, "UIDropDownMenuTemplate")
+moduleDropdown:SetPoint("TOPLEFT", WORS_Loot, "TOPLEFT", 20, -30)
+UIDropDownMenu_SetWidth(moduleDropdown, 130)
+print("Module dropdown created.")
+
+local subcategoryDropdown = CreateFrame("Frame", "WORS_Loot_SubcategoryDropdown", WORS_Loot, "UIDropDownMenuTemplate")
+subcategoryDropdown:SetPoint("TOPLEFT", moduleDropdown, "TOPLEFT", 160, 0)
+UIDropDownMenu_SetWidth(subcategoryDropdown, 130)
+print("Subcategory dropdown created.")
+
+local thirdDropdown = CreateFrame("Frame", "WORS_Loot_ThirdDropdown", WORS_Loot, "UIDropDownMenuTemplate")
+thirdDropdown:SetPoint("TOPLEFT", subcategoryDropdown, "TOPLEFT", 160, 0)
+UIDropDownMenu_SetWidth(thirdDropdown, 130)
+print("Third dropdown created.")
+
+-- Data
+local WORS_Loot_Slayer_Data = {
+    Turael = {
+        ["Aberrant Spectres"] = {90039},
+        ["Abyssal Demons"] = {90039, 90979, 999999},
+        ["Ankou"] = {90039, 999999},
+    },
+    Mazchna = {
+        ["Giant Bats"] = {90039, 999899},
+        ["Murlocs"] = {90039, 999899},
+    },
+    Vannaka = {
+        ["Abyssal Demons"] = {90039, 90040},
+        ["Black Demons"] = {90039},
+    }
+}
+
+local WORS_Loot_Boss_Data = {
+    ["Kalphite Queen"] = {90144, 2455, 90479, 90133, 90328, 90390, 90084, 90005, 90521, 90526, 90519, 90627, 90620, 90750},
+    ["King Black Dragon"] = {90066, 90368, 90347, 90343, 91119},
+}
+
+-- Modular Functions
+local function PopulateDropdown(dropdown, data)
+    print("Location: PopulateDropdown start")
+    if not data then
+        print("Error: No data provided for dropdown.")
+        return
+    end
+    UIDropDownMenu_ClearAll(dropdown)
+    UIDropDownMenu_SetText(dropdown, "Select...")
+    UIDropDownMenu_Initialize(dropdown, function(self, level)
+        for _, item in ipairs(data) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = item
+            info.func = function()
+                UIDropDownMenu_SetText(dropdown, item)
+                print("Selected item:", item)
+                -- Call the relevant update function here
+                if dropdown == subcategoryDropdown then
+                    UpdateThirdDropdown(item) -- Call to update third dropdown items
+                end
+                UpdateLootTable() -- Update loot table
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+    print("Location: PopulateDropdown end")
+end
+
+local function UpdateDropdownBasedOnSelection(dropdown, selectedValue, data)
+    print("Location: UpdateDropdownBasedOnSelection start")
+    if not data or not data[selectedValue] then
+        print("No data found for selection:", selectedValue)
+        return
+    end
+    UIDropDownMenu_ClearAll(dropdown)
+    UIDropDownMenu_SetText(dropdown, "Select...")
+    UIDropDownMenu_Initialize(dropdown, function(self, level)
+        for subcategory, _ in pairs(data[selectedValue]) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = subcategory
+            info.func = function()
+                UIDropDownMenu_SetText(dropdown, subcategory)
+                print("Subcategory selected:", subcategory)
+                UpdateLootTable() -- Update loot table when a subcategory is selected
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+end
+
+-- Loot Table Frame
+local lootTableFrame = CreateFrame("ScrollFrame", "WORS_Loot_LootTable", WORS_Loot, "UIPanelScrollFrameTemplate")
+lootTableFrame:SetSize(440, 350)
+lootTableFrame:SetPoint("TOPLEFT", moduleDropdown, "BOTTOMLEFT", 20, -20)
+lootTableFrame:SetBackdrop({
+    bgFile = "Interface/Tooltips/UI-Tooltip-Background",
+    edgeFile = "Interface/Tooltips/UI-Tooltip-Border",
+    tile = true, tileSize = 16, edgeSize = 16,
+    insets = { left = 4, right = 4, top = 4, bottom = 4 }
+})
+lootTableFrame:SetBackdropColor(0, 0, 0, 0)
+lootTableFrame:SetBackdropBorderColor(0, 0, 0, 0)
+local lootContent = CreateFrame("Frame", nil, lootTableFrame)
+lootContent:SetSize(225, 1)
+lootTableFrame:SetScrollChild(lootContent)
+local lootItems = {}
+local buttonHeight = 40
+local buttonSpacing = 5
+
+-- Create clickable item link with icon using item ID
+local function CreateLootButton(itemId, index)
+    print("Location: CreateLootButton start")
+    print("Creating loot button for item ID:", itemId)
+    if not itemId then
+        print("Error: Missing item ID.")
+        return nil
+    end
+    local lootButton = CreateFrame("Button", nil, lootContent)
+    lootButton:SetSize(220, buttonHeight)
+
+    -- Calculate row and column based on the index
+    local column = (index - 1) % 2  -- 0 for first column, 1 for second column
+    local row = math.floor((index - 1) / 2) -- Calculate the row number
+    lootButton:SetPoint("TOPLEFT", lootContent, "TOPLEFT", 10 + column * (220 + 10), -(row * (buttonHeight + buttonSpacing)))
+
+    local itemIcon = lootButton:CreateTexture(nil, "ARTWORK")
+    itemIcon:SetSize(40, 40)
+    itemIcon:SetPoint("LEFT", lootButton, "LEFT", 5, 0)
+    itemIcon:SetTexture(GetItemIcon(itemId) or "Interface/Icons/INV_Misc_QuestionMark")
+    lootButton:SetScript("OnEnter", function(self)
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        local itemLink = GetItemLink(itemId)
+        if itemLink then
+            GameTooltip:SetHyperlink(itemLink)
+            GameTooltip:Show()
+        else
+            print("Error: Item link not found for item ID " .. itemId)
+        end
+    end)
+    lootButton:SetScript("OnLeave", function()
+        GameTooltip:Hide()
+    end)
+
+    local itemName = lootButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    itemName:SetPoint("LEFT", itemIcon, "RIGHT", 5, 0)
+    itemName:SetFont("Fonts\\runescape.ttf", 20) -- Set custom font and size
+
+    -- Attempt to fetch the item name using the cached method
+    local itemInfo = {GetItemInfo(itemId)}
+    if itemInfo[1] then
+        itemName:SetText(itemInfo[1]) -- Use the name if found
+    else
+        -- Fallback method: Use item ID to create a hyperlink format
+        local itemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)
+        itemName:SetText(itemLink) -- Display the raw hyperlink format
+        itemName:SetTextColor(1, 1, 0) -- Yellow color for unknown items
+
+        -- Using GetTime for a simple timeout mechanism
+        local loadingStartTime = GetTime()
+        lootButton:SetScript("OnUpdate", function(self)
+            if (GetTime() - loadingStartTime) > 120 then
+                itemName:SetText("Unknown Item") -- Change to a default state after timeout
+                lootButton:SetScript("OnUpdate", nil) -- Remove the update script
+            else
+                local itemLinkUpdated = GetItemLink(itemId) -- Update the item link periodically
+                if itemLinkUpdated then
+                    itemName:SetText(itemLinkUpdated) -- Set the name if found
+                    itemName:SetTextColor(1, 1, 1) -- Reset to white if item is found
+                    lootButton:SetScript("OnUpdate", nil) -- Stop updating if the item is found
+                end
+            end
+        end)
+    end
+    print("Location: CreateLootButton end")
+    return lootButton
+end
+
+local function UpdateLootTable()
+    print("Location: UpdateLootTable start")
+    local selectedModule = UIDropDownMenu_GetText(moduleDropdown)
+    local selectedSubcategory = UIDropDownMenu_GetText(subcategoryDropdown)
+
+    -- Clear previous items
+    for _, item in ipairs(lootItems) do
+        item:Hide()
+        item:ClearAllPoints()
+    end
+    lootItems = {}
+
+    if selectedModule == "Select..." or selectedSubcategory == "Select..." then
+        print("Module or subcategory not selected.")
+        return
+    end
+
+    local itemIds = nil
+    if selectedModule and WORS_Loot_Slayer_Data[selectedModule] then
+        itemIds = WORS_Loot_Slayer_Data[selectedModule][selectedSubcategory]
+    elseif selectedModule and WORS_Loot_Boss_Data[selectedModule] then
+        itemIds = WORS_Loot_Boss_Data[selectedModule]
+    end
+
+    if itemIds and #itemIds > 0 then
+        print("Loot Items found for selection, updating table.")
+        for index, itemId in ipairs(itemIds) do
+            local lootButton = CreateLootButton(itemId, index)
+            if lootButton then
+                lootItems[#lootItems + 1] = lootButton
+            end
+        end
+    else
+        print("No loot items found for selection.")
+    end
+    print("Location: UpdateLootTable end")
+end
+
+local function UpdateThirdDropdown(subcategory)
+    print("Location: UpdateThirdDropdown start")
+    -- You can define logic here to update the third dropdown based on the subcategory.
+    -- For example:
+    print("Updating third dropdown based on subcategory:", subcategory)
+    -- Update the third dropdown here based on your data structure
+    -- e.g., Use a similar pattern as before to populate thirdDropdown if applicable
+    print("Location: UpdateThirdDropdown end")
+end
+
+-- Initialize the dropdowns
+UIDropDownMenu_SetText(moduleDropdown, "Select Module...")
+PopulateDropdown(moduleDropdown, {"Turael", "Mazchna", "Vannaka", "Kalphite Queen", "King Black Dragon"})
+print("Dropdowns initialized.")
+
+-- Set script to update the subcategory dropdown when a module is selected
+moduleDropdown:SetScript("OnShow", function()
+    UIDropDownMenu_SetText(subcategoryDropdown, "Select Subcategory...")
+    UpdateDropdownBasedOnSelection(subcategoryDropdown, UIDropDownMenu_GetText(moduleDropdown), WORS_Loot_Slayer_Data)
+end)
+
+WORS_Loot:Show()
