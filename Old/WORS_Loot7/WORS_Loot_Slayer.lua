@@ -3,7 +3,7 @@ WORS_Loot_Slayer_Data = {
 	subcategoryOneText = "Select Master",
 	subcategoryTwo = true,
 	subcategoryTwoText = "Select Task",
-	masters = {"Turael", "Mazchna", "Vannaka",},  -- Add masters here
+	masters = {"Mazchna", "Vannaka","Turael"},  -- Add masters here
 		
     Mazchna = {
         ["Giant Bats"] = {90039,},

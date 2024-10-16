@@ -16,5 +16,3 @@ WORS_Loot.lua
 WORS_Loot_Slayer.lua
 WORS_Loot_Bosses.lua
 WORS_Loot_Skills.lua
-WORS_Loot_Memes.lua
-

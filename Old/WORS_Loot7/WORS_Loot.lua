@@ -1,13 +1,4 @@
 -- Create the main frame
--- TO add new module ensure Data file is in this format "WORS_Loot_*ModuleName*_Data"
--- Changes will need to be made in two functions to add new modules
-	--2 Dropdown
-	--2 Changes follow template in UpdateLootTable(subCat, subSubCat)
-	--3 Changes follow template in UpdateSubcategoryDropdown(selectedModule)
-	--1 Dropdown
-	--1 Change  follow template in UpdateLootTable(subCat, subSubCat)
-	--2 Changes follow template in UpdateSubcategoryDropdown(selectedModule)
-
 local WORS_Loot = CreateFrame("Frame", "WORS_Loot", UIParent)
 WORS_Loot:SetSize(550, 450)
 WORS_Loot:SetPoint("CENTER")
@@ -121,12 +112,10 @@ local function CreateLootButton(itemId, index)
     local itemName = lootButton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     itemName:SetPoint("LEFT", itemIcon, "RIGHT", 5, 0)
     itemName:SetFont("Fonts\\runescape.ttf", 20)  -- Set custom font and size
-	itemName:SetTextColor(0, 0, 1)
     -- Attempt to fetch the item name using the cached method
     local itemInfo = {GetItemInfo(itemId)}
     if itemInfo[1] then
-        itemName:SetTextColor(1, 1, 0)
-		itemName:SetText(itemInfo[1])  -- Use the name if found
+        itemName:SetText(itemInfo[1])  -- Use the name if found
     else
         -- Fallback method: Use item ID to create a hyperlink format
         local itemLink = format("|cffff8000|Hitem:%d:0:0:0:0:0:0:0|h[%d]|h|r", itemId, itemId)        
@@ -135,15 +124,15 @@ local function CreateLootButton(itemId, index)
         -- Using GetTime for a simple timeout mechanism
         local loadingStartTime = GetTime()
         lootButton:SetScript("OnUpdate", function(self)
-            if (GetTime() - loadingStartTime) > 999 then
-                --itemName:SetText("Unknown Item")  -- Change to a default state after timeout
+            if (GetTime() - loadingStartTime) > 120 then
+                itemName:SetText("Unknown Item")  -- Change to a default state after timeout
                 lootButton:SetScript("OnUpdate", nil)  -- Stop the update script
             else
                 -- Try to fetch the item info again to see if it has been cached now
                 itemInfo = {GetItemInfo(itemId)}
                 if itemInfo[1] then
                     itemName:SetText(itemInfo[1])  -- Update the name if it has now been found
-                    itemName:SetTextColor(1, 1, 0)  -- Reset color to white
+                    itemName:SetTextColor(1, 1, 1)  -- Reset color to white
                     lootButton:SetScript("OnUpdate", nil)  -- Stop the update script
                 end
             end
@@ -193,41 +182,26 @@ local function ClearLootContent()
 end
 
 -- Update Loot Table based on selection
--- ********************************
--- *****HERE TO ADD NEW MODULE*****
--- ********************************
 local function UpdateLootTable(subCat, subSubCat)
-	print("Updating loot table for SubCat:", subCat, "SubSubCat:", subSubCat)
+    print("Updating loot table for SubCat:", subCat, "SubSubCat:", subSubCat)
     ClearLootContent()
     local lootEntries
-    -- Check for loot entries in with 2 dropdowns Data
+
+    -- Check for loot entries in Slayer Data
     if subCat and subSubCat then
+		--lootEntries = WORS_Loot_Slayer_Data[subCat] and WORS_Loot_Slayer_Data[subCat][subSubCat]
         lootEntries = WORS_Loot_Slayer_Data[subCat] and WORS_Loot_Slayer_Data[subCat][subSubCat]
-        print("Checking ", subCat, " Data: ", lootEntries) -- Debugging output
+        print("Checking Slayer Data: ", lootEntries) -- Debugging output
         -- If not found in Slayer Data, check Skill Data
         if not lootEntries then
             lootEntries = WORS_Loot_Skill_Data[subCat] and WORS_Loot_Skill_Data[subCat][subSubCat]
-            print("Checking ", subCat, " Data: ", lootEntries) -- Debugging output
-			if not lootEntries then
-				lootEntries = WORS_Loot_Meme_Data[subCat] and WORS_Loot_Meme_Data[subCat][subSubCat]
-				print("Checking ", subCat, " Data: ", lootEntries) -- Debugging output
-				-- 	To add new 2 Catogry following template bellow 
-				--if not lootEntries then
-					--lootEntries = WORS_Loot_*ModuleName*_Data[subCat] and WORS_Loot_*ModuleName*_Data[subCat][subSubCat]
-					--print("Checking ", subCat, " Data: ", lootEntries) 
-				--end
-			end
-		end		
-    -- If no SubCat provided, check Boss Data / One dropdown
+            print("Checking Skill Data: ", lootEntries) -- Debugging output
+        end
+    -- If no SubCat provided, check Boss Data
     elseif subSubCat then
         lootEntries = WORS_Loot_Boss_Data[subSubCat]
-		print("Checking ", subCat, " Data: ", lootEntries) -- Debugging output
-		-- 	To add new 1 Catogry in " follow template bellow  
-		--if not lootEntries then
-			--lootEntries = WORS_Loot_*ModuleName*_Data[subCat] and WORS_Loot_*ModuleName*_Data[subCat][subSubCat]
-			--print("Checking ", subCat, " Data: ", lootEntries) -- Debugging output
-		--end	
-	end
+    end
+
     -- If lootEntries is found, create loot buttons
     if lootEntries then
         for i, itemId in ipairs(lootEntries) do
@@ -243,14 +217,36 @@ local function UpdateLootTable(subCat, subSubCat)
 end
 
 
+
+
+-- Update Subcategory for Slayer
+local function UpdateSlayerTasks(selectedMaster)
+    print("Updating Slayer tasks for Master:", selectedMaster)
+    UIDropDownMenu_ClearAll(thirdDropdown)
+    UIDropDownMenu_SetText(thirdDropdown, WORS_Loot_Slayer_Data.subcategoryTwoText)
+    local tasks = WORS_Loot_Slayer_Data[selectedMaster]
+    UIDropDownMenu_Initialize(thirdDropdown, function(self, level)
+        for task, _ in pairs(tasks) do
+            local info = UIDropDownMenu_CreateInfo()
+            info.text = task
+            info.func = function()
+                UIDropDownMenu_SetText(thirdDropdown, task)
+                UpdateLootTable(selectedMaster, task)
+            end
+            UIDropDownMenu_AddButton(info)
+        end
+    end)
+end
+
 -- Update Subcategory for Skills / ModularTemplate
-local function UpdateSubCategory(selectedMod, selectedCat)
-	ClearLootContent()
+local function UpdateSubCategory(selectedCat)
     print("UpdateSubCategory: Updating thirdDropdown for selected subSubCat:", selectedCat)
     UIDropDownMenu_ClearAll(thirdDropdown)
-    UIDropDownMenu_SetText(thirdDropdown, selectedMod.subcategoryTwoText)
-    local subTasks = selectedMod[selectedCat]    
-    print("Retrieved subsubcats for category:", selectedCat)
+    UIDropDownMenu_SetText(thirdDropdown, WORS_Loot_Skill_Data.subcategoryTwoText)
+
+    local subTasks = WORS_Loot_Skill_Data[selectedCat]
+    
+    print("Retrieved subTasks for category:", selectedCat)
     if subTasks then
         for task, _ in pairs(subTasks) do
             print(" - " .. task)
@@ -259,6 +255,7 @@ local function UpdateSubCategory(selectedMod, selectedCat)
         print("No subTasks found for category:", selectedCat)
         return  -- Exit early if no tasks found
     end
+
     UIDropDownMenu_Initialize(thirdDropdown, function(self, level)
         for task, _ in pairs(subTasks) do
             local info = UIDropDownMenu_CreateInfo()
@@ -274,17 +271,15 @@ end
 
 
 -- Update Subcategory Dropdown
--- ********************************
--- *****HERE TO ADD NEW MODULE*****
--- ********************************
 local function UpdateSubcategoryDropdown(selectedModule)
     print("Updating subcategory dropdown for module:", selectedModule)
     UIDropDownMenu_ClearAll(subcategoryDropdown)
     UIDropDownMenu_ClearAll(thirdDropdown)
-    UIDropDownMenu_SetText(thirdDropdown, "")    
-	ClearLootContent() -- Clear previous loot items	
+    UIDropDownMenu_SetText(thirdDropdown, "")
+    
+	--ClearLootContent() -- Clear previous loot items
+	
 	-- one SubCatogry
-	-- *****USE AS ONE CAT TEMPLATE UNTESTED*****
     if selectedModule == "Bosses" then
         UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Boss_Data.subcategoryOneText)
         -- Retrieve bosses from the data file
@@ -301,9 +296,9 @@ local function UpdateSubcategoryDropdown(selectedModule)
                 UIDropDownMenu_AddButton(info)
             end
         end)
-		thirdDropdown:Hide()	
+		thirdDropdown:Hide()
+	
 	-- two SubCatogry
-	-- *****USE AS TWO CAT TEMPLATE UNTESTED*****
     elseif selectedModule == "Slayer" then
         UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Slayer_Data.subcategoryOneText)
         -- Retrieve masters from the data file
@@ -315,12 +310,13 @@ local function UpdateSubcategoryDropdown(selectedModule)
                 info.text = master
                 info.func = function()
                     UIDropDownMenu_SetText(subcategoryDropdown, master)
-                    UpdateSubCategory(WORS_Loot_Slayer_Data,master)
+                    UpdateSlayerTasks(master)
                 end
                 UIDropDownMenu_AddButton(info)
             end
         end)
-		thirdDropdown:Show()  	
+		thirdDropdown:Show()  
+	
 	-- two SubCatogry
 	elseif selectedModule == "Skills" then
 		UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Skill_Data.subcategoryOneText)
@@ -332,41 +328,20 @@ local function UpdateSubcategoryDropdown(selectedModule)
 				info.text = cat
 				info.func = function()
 					UIDropDownMenu_SetText(subcategoryDropdown, cat)
-					UpdateSubCategory(WORS_Loot_Skill_Data,cat)
-				end
-				UIDropDownMenu_AddButton(info)
-			end
-		end)
-		thirdDropdown:Show()  -- Make sure this is shown when Skills is selected	
-	-- two SubCatogry	
-	elseif selectedModule == "Memes" then
-		UIDropDownMenu_SetText(subcategoryDropdown, WORS_Loot_Meme_Data.subcategoryOneText)
-		local subTwoCat = WORS_Loot_Meme_Data.subTwoCat or {}
-		print("subTwoCat: ", subTwoCat)  -- Check if this is populated correctly
-		UIDropDownMenu_Initialize(subcategoryDropdown, function(self, level)
-			for _, cat in ipairs(subTwoCat) do
-				local info = UIDropDownMenu_CreateInfo()
-				info.text = cat
-				info.func = function()
-					UIDropDownMenu_SetText(subcategoryDropdown, cat)
-					UpdateSubCategory(WORS_Loot_Meme_Data,cat)
+					UpdateSubCategory(cat)
 				end
 				UIDropDownMenu_AddButton(info)
 			end
 		end)
 		thirdDropdown:Show()  -- Make sure this is shown when Skills is selected
-	-- *****HERE TO ADD NEW two SubCatogry MODULE*****
 	end
+
 end
 	
 
 -- Module Dropdown Logic
--- ********************************
--- *****HERE TO ADD NEW MODULE*****
--- ********************************
 UIDropDownMenu_Initialize(moduleDropdown, function(self, level)
-	-- Add Module name bellow to add to first dropdown menu
-    local modules = {"Bosses", "Slayer", "Skills", "Memes"}
+    local modules = {"Bosses", "Slayer", "Skills"}
     for _, module in ipairs(modules) do
         local info = UIDropDownMenu_CreateInfo()
         info.text = module
